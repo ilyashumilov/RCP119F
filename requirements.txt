@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+celery
+redis
+pydantic
+sqlalchemy
+psycopg2-binary
+pybit
+pydantic_settings
+pyTelegramBotAPI
+telebot
+pycryptodome
