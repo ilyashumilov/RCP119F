@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> . </title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <link rel="icon" href="http://45.82.152.74:8000/favicon.ico" type="image/x-icon">
+    <style>
+        button {
+            padding: 7px 7px;
+            font-size: 10px;
+            background-color: white;
+            color: black;
+            border: 1px solid #000; /* Black border */
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #000;
+            color: white;
+        }
+
+        form {
+            margin-top: 10px;
+        }
+
+        input {
+            padding: 5px;
+            margin-bottom: 10px;
+            border: 1px solid #000; /* Black border */
+            border-radius: 4px;
+        }
+
+        #cIndexDisplay {
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        #cIndexInput {
+            padding: 5px;
+            margin-bottom: 10px;
+            width: 20px;
+            border: 1px solid #000; /* Black border */
+            border-radius: 4px;
+        }
+
+        #horizontal-line {
+            position: absolute;
+            width: 100%;
+            border-top: 1px solid black;
+            pointer-events: none;
+            display: none;
+        }
+        .link {
+            padding: 7px 7px;
+            font-size: 10px;
+            background-color: white;
+            color: black;
+            border: 1px solid #000; /* Black border */
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none; /* Add underline below the text */
+        }
+        .link:hover {
+            background-color: #000;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div id="chart-div" style="position: relative;"></div>
+    <div id="horizontal-line"></div>
+
+    <form id="update-form">
+        <a href="http://45.82.152.74:8000/calculator" class="link">OVRW</a>
+        <button type="button" onclick="updateChart()">Update</button>
+        <button type="button" onclick="notify()">Notify</button>
+        <input type="text" id="cIndexInput" name="cIndexInput" placeholder="cI ">
+    </form>
+
+    <div id="cIndexDisplay">Current C Index: <span id="cIndexValue">0</span></div>
+
+    <script>
+        let cIndex = 0;
+        let lines = []; // Array to store drawn lines
+
+        function deploy() {
+            const cDeployInput = document.getElementById('cDeployInput');
+            const jsonString = JSON.stringify({'symbols': cDeployInput.value});
+
+            fetch('/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: jsonString
+            });
+        }
+
+        function notify() {
+            const jsonString = JSON.stringify({'c_index': cIndex});
+            fetch('/notify', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: jsonString
+            });
+        }
+
+        function updateChart() {
+            // Get C Index from the form input
+            const cIndexInput = document.getElementById('cIndexInput');
+            const jsonString = JSON.stringify({'c_index': cIndexInput.value});
+
+            // Make an AJAX request to the Flask route to get new data
+            $.ajax({
+                url: '/get_new_data',
+                type: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                data: jsonString,
+                success: function(response) {
+                    // Parse the new chart JSON
+                    const newChartJsonString = response.new_chart_json;
+                    cIndex = response.c_index;
+
+                    // Update the displayed value
+                    const cIndexValueSpan = document.getElementById('cIndexValue');
+                    cIndexValueSpan.textContent = cIndex;
+
+                    try {
+                        // Attempt to parse the JSON string
+                        const newChartJson = JSON.parse(newChartJsonString);
+
+                        // Check if newChartJson is defined and has the expected structure
+                        if (newChartJson && newChartJson.data && newChartJson.layout) {
+                            // Update the chart with the new data using Plotly.react
+                            Plotly.react('chart-div', newChartJson.data, newChartJson.layout);
+
+                            // Show horizontal line where the mouse is
+                            document.getElementById('chart-div').addEventListener('mousemove', function(e) {
+                                const horizontalLine = document.getElementById('horizontal-line');
+                                horizontalLine.style.top = e.clientY + 'px';
+                                horizontalLine.style.display = 'block';
+                            });
+
+                            // Hide horizontal line when mouse leaves the chart area
+                            document.getElementById('chart-div').addEventListener('mouseleave', function(e) {
+                                const horizontalLine = document.getElementById('horizontal-line');
+                                horizontalLine.style.display = 'none';
+                            });
+
+                            // Detect mouse clicks to draw lines
+                            document.getElementById('chart-div').addEventListener('click', function(e) {
+                                const x = e.offsetX;
+                                const y = e.offsetY;
+
+                                const line = {
+                                    type: 'line',
+                                    x0: 0,
+                                    y0: y,
+                                    x1: newChartJson.layout.xaxis.range[1], // End of x-axis
+                                    y1: y,
+                                    mode: 'lines',
+                                    line: {
+                                        color: 'red',
+                                        width: 2
+                                    }
+                                };
+
+                                lines.push(line);
+
+                                // Update the chart with the new line
+                                Plotly.react('chart-div', [...newChartJson.data, ...lines], newChartJson.layout);
+                            });
+                        } else {
+                            console.log('Invalid or undefined data structure in newChartJson:', newChartJson);
+                        }
+                    } catch (error) {
+                        console.log('Error parsing new_chart_json:', error);
+                    }
+                },
+                error: function(error) {
+                    console.log('Error fetching new data:', error);
+                }
+            });
+        }
+    </script>
+</body>
+</html>

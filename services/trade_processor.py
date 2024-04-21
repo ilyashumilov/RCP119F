@@ -5,7 +5,7 @@ import time
 from db.orm import update_trade_process, get_trade_process_by_id
 from db.config import Session
 from services.config import PositionType, TraderType
-from services.config import session as broker_session
+from pybit import unified_trading
 
 
 class TradeProcessor:
@@ -20,6 +20,7 @@ class TradeProcessor:
         lower_bound: float,
         grid_count: int,
         db_session: Session,
+        broker_session: unified_trading.HTTP,
     ):
         self._symbol = symbol
 
@@ -38,6 +39,7 @@ class TradeProcessor:
         self._grid_position_size = None
         self._id = id
         self._session = db_session
+        self._broker_session = broker_session
         self._direct_orders = {}
         self._reverse_orders = {}
 
@@ -70,7 +72,7 @@ class TradeProcessor:
 
     def _get_symbol_info(self):
         try:
-            symbol_info = broker_session.get_instruments_info(
+            symbol_info = self._broker_session.get_instruments_info(
                 category="linear",
                 symbol=self._symbol,
             )["result"]["list"][0]
@@ -85,7 +87,7 @@ class TradeProcessor:
 
     def _get_last_traded_price(self) -> float:
         try:
-            response = broker_session.get_tickers(
+            response = self._broker_session.get_tickers(
                 category="linear", symbol=self._symbol
             )
             return float(response["result"]["list"][0]["lastPrice"])
@@ -98,7 +100,7 @@ class TradeProcessor:
 
     def _place_order(self, price: float, side: str) -> str:
         try:
-            resp = broker_session.place_order(
+            resp = self._broker_session.place_order(
                 category="linear",
                 symbol=self._symbol,
                 side=side.value,
@@ -110,11 +112,13 @@ class TradeProcessor:
             )
             return resp["result"]["orderId"]
         except:
+            import traceback
+            traceback.print_exc()
             raise Exception("_place_order")
 
     def _get_order_status(self, order_id) -> bool:
         try:
-            resp = broker_session.get_order_history(
+            resp = self._broker_session.get_order_history(
                 category="linear",
                 symbol=self._symbol,
                 orderId=order_id,
@@ -141,18 +145,22 @@ class TradeProcessor:
         return level1, level2
 
     def _complete(self) -> bool:
-        target_trade_process = get_trade_process_by_id(self._session, self._id)
-        if target_trade_process.completed_at:
-            pending_orders = self._get_pending_orders(target_trade_process.symbol)
-            self._cancel_pending_orders(pending_orders, target_trade_process.symbol)
-            existing_position_info = self._get_existing_position_info(target_trade_process.symbol)
-            self._close_position(existing_position_info)
-            return True
+        try:
+            target_trade_process = get_trade_process_by_id(self._session, self._id)
+            if target_trade_process.completed_at:
+                pending_orders = self._get_pending_orders(target_trade_process.symbol)
+                self._cancel_pending_orders(pending_orders, target_trade_process.symbol)
+                existing_position_info = self._get_existing_position_info(target_trade_process.symbol)
+                self._close_position(existing_position_info)
+                return True
+        except:
+            pass
+
         return False
 
     def _close_position(self, existing_position: dict) -> None:
         if float(existing_position['size']) != 0.0:
-            broker_session.place_order(
+            self._broker_session.place_order(
                 category="linear",
                 symbol=existing_position['symbol'],
                 side='Sell' if existing_position['side'] == 'Buy' else 'Buy',
@@ -162,7 +170,7 @@ class TradeProcessor:
             )
 
     def _get_existing_position_info(self, symbol) -> dict:
-        response = broker_session.get_positions(category="linear", symbol=symbol)[
+        response = self._broker_session.get_positions(category="linear", symbol=symbol)[
             "result"
         ]["list"]
 
@@ -174,7 +182,7 @@ class TradeProcessor:
     def _cancel_pending_orders(self, pending_orders: list, symbol: str) -> None:
         for pending_order in pending_orders:
             try:
-                broker_session.cancel_order(
+                self._broker_session.cancel_order(
                     category="linear",
                     symbol=symbol,
                     orderId=pending_order["orderId"],
@@ -183,7 +191,7 @@ class TradeProcessor:
                 continue
 
     def _get_pending_orders(self, symbol: str) -> list:
-        response = broker_session.get_open_orders(
+        response = self._broker_session.get_open_orders(
             category="linear",
             symbol=symbol,
             openOnly=0,
@@ -281,7 +289,7 @@ class TradeProcessor:
         if directional_check == 2:
             for level_to_cancel in levels_to_cancel:
                 try:
-                    broker_session.cancel_order(
+                    self._broker_session.cancel_order(
                         category="linear",
                         symbol=self._symbol,
                         orderId=self._direct_orders[level_to_cancel],

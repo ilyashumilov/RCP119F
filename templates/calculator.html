@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> . </title>
+    <link rel="icon" href="http://45.82.152.74:8000/favicon.ico" type="image/x-icon">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .container-wrapper {
+            display: flex; /* Use flexbox */
+            justify-content: center; /* Center horizontally */
+            align-items: center; /* Center vertically */
+        }
+        .container, .form-container {
+            flex: 1; /* Equal distribution of space */
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            margin-right: 10px; /* Adjust spacing between containers */
+        }
+        .form-container {
+            max-width: 400px;
+            margin-left: 10px; /* Adjust spacing between containers */
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #f0f0f0;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        .stop-button {
+            background-color: #ff3333;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 15px;
+            cursor: pointer;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
+        .form-group input {
+            width: calc(100% - 10px);
+            padding: 6px;
+            border: 1px solid #000000;
+            border-radius: 3px;
+            box-sizing: border-box;
+        }
+        .form-group button {
+            width: 100%;
+            padding: 8px;
+            border: none;
+            border-radius: 3px;
+            background-color: #000000;
+            color: #ffffff;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .result-container {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #ffffff;
+            display: none;
+        }
+        .result-container p {
+            margin: 10px 0;
+            padding: 5px;
+            font-size: 14px;
+        }
+        .result-container p strong {
+            display: inline-block;
+            width: 200px;
+        }
+        .result-container p span {
+            display: inline-block;
+            width: calc(100% - 220px);
+        }
+        .link {
+            width: 100px;
+            margin-top: 20px;
+            margin-left: 20px;
+            padding: 8px;
+            border: none;
+            border-radius: 3px;
+            background-color: #000000;
+            color: #ffffff;
+            font-size: 16px;
+            border: 1px solid black;
+            cursor: pointer;
+            display: flex; /* Use flexbox */
+            text-decoration: none; /* Add underline below the text */
+        }
+        .link:hover {
+            background-color: white;
+            color: black;
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <a href="http://45.82.152.74:8000/" class="link">CLC</a>
+    <div class="container-wrapper">
+        <div class="container">
+            <h1>Stats Table</h1>
+            <table id="stats-table">
+                <thead>
+                    <tr>
+                        <th>Symbol</th>
+                        <th>Unclosed PnL</th>
+                        <th>Grid PnL</th>
+                        <th>Total PnL</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="form-container">
+            <h2>Grid Trading Parameters</h2>
+            <div class="form-group">
+                <label for="symbol">Symbol:</label>
+                <input type="text" id="symbol" name="symbol" value="BTCUSDT" required>
+            </div>
+            <div class="form-group">
+                <label for="type">Type:</label>
+                <input type="text" id="type" name="type" value="LONG" required>
+            </div>
+            <div class="form-group">
+                <label for="upperBand">Upper Band:</label>
+                <input type="number" id="upperBand" name="upperBand" step="0.001" value="0.034" required>
+            </div>
+            <div class="form-group">
+                <label for="lowerBand">Lower Band:</label>
+                <input type="number" id="lowerBand" name="lowerBand" step="0.001" value="0.024" required>
+            </div>
+            <div class="form-group">
+                <label for="gridCount">Grid Count:</label>
+                <input type="number" id="gridCount" name="gridCount" value="50" required>
+            </div>
+            <div class="form-group">
+                <label for="capitalEffective">Capital Effective:</label>
+                <input type="number" id="capitalEffective" name="capitalEffective" step="0.01" value="30" required>
+            </div>
+            <div class="form-group">
+                <label for="capitalPercentage">Capital Percentage:</label>
+                <input type="number" id="capitalPercentage" name="capitalPercentage" step="0.01" value="5" required>
+            </div>
+            <div class="form-group">
+                <label for="leverage">Leverage:</label>
+                <input type="number" id="leverage" name="leverage" value="15" required>
+            </div>
+            <div class="form-group">
+                <button onclick="calculate()">Calculate</button>
+            </div>
+            <div class="form-group">
+                <button onclick="deploy()">Deploy</button>
+            </div>
+            <div class="result-container" id="resultContainer">
+                <p><strong>Percentage Change between grid levels:</strong> <span id="percentageChange"></span></p>
+                <p><strong>Percentage Change:</strong> <span id="percentageChangeGrid"></span></p>
+                <p><strong>Average Percentage Change:</strong> <span id="averagePercentageChange"></span></p>
+                <p><strong>Suggested Capital% per Grid:</strong> <span id="suggestedCapitalPercentagePerGrid"></span></p>
+                <p><strong>Effective Capital per Grid:</strong> <span id="effectiveCapitalPerGrid"></span></p>
+                <p><strong>Leveraged Capital per Grid:</strong> <span id="leveragedCapitalPerGrid"></span></p>
+                <p><strong>Expected Average PnL:</strong> <span id="expectedAveragePnl"></span></p>
+            </div>
+        </div>
+    </div>
+<script>
+    function collectFormData() {
+        var leverage = parseFloat(document.getElementById("leverage").value);
+        var capitalPercentage = parseFloat(document.getElementById("capitalPercentage").value);
+        var capitalEffective = parseFloat(document.getElementById("capitalEffective").value);
+        var effectiveCapitalPerGrid = capitalEffective * capitalPercentage / 100;
+        var leveragedCapitalPerGrid = effectiveCapitalPerGrid * leverage;
+
+        var formData = {
+            symbol: document.getElementById("symbol").value,
+            type: document.getElementById("type").value,
+            capital: leveragedCapitalPerGrid,
+            leverage: document.getElementById("leverage").value,
+            upper_bound: document.getElementById("upperBand").value,
+            lower_bound: document.getElementById("lowerBand").value,
+            grid_count: document.getElementById("gridCount").value,
+        };
+        return formData;
+    }
+
+    function deploy() {
+        var formData = collectFormData();
+
+        fetch('http://45.82.152.74:8000/new', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData),
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            }
+            throw new Error('Network response was not ok.');
+        })
+        .then(data => {
+            console.log(data); // Handle response data if needed
+        })
+        .catch(error => {
+            console.error('Error during fetch:', error);
+        });
+    }
+
+    function calculate() {
+        var upperBand = parseFloat(document.getElementById("upperBand").value);
+        var lowerBand = parseFloat(document.getElementById("lowerBand").value);
+        var gridCount = parseInt(document.getElementById("gridCount").value);
+        var capitalEffective = parseFloat(document.getElementById("capitalEffective").value);
+        var capitalPercentage = parseFloat(document.getElementById("capitalPercentage").value);
+        var leverage = parseFloat(document.getElementById("leverage").value);
+
+        var boundDiff = upperBand - lowerBand;
+        var gridDiff = boundDiff / gridCount;
+        var percentageChangeGeneral = ((upperBand - lowerBand) / lowerBand) * 100;
+        var lowestPercentageChange = (gridDiff / upperBand) * 100;
+        var highestPercentageChange = (gridDiff / lowerBand) * 100;
+        var averagePercentageChange = (lowestPercentageChange + highestPercentageChange) / 2;
+
+        var suggestedCapitalPercentage = (capitalEffective / gridCount / capitalEffective) * 100
+
+        var effectiveCapitalPerGrid = capitalEffective * capitalPercentage / 100;
+        var leveragedCapitalPerGrid = effectiveCapitalPerGrid * leverage;
+
+        var expectedAveragePnl = leveragedCapitalPerGrid * averagePercentageChange / 100;
+
+        document.getElementById("percentageChange").innerText = percentageChangeGeneral.toFixed(2) + "%";
+        document.getElementById("percentageChangeGrid").innerText = (gridDiff / lowerBand * 100).toFixed(2) + "%";
+        document.getElementById("averagePercentageChange").innerText = averagePercentageChange.toFixed(2) + "%";
+        document.getElementById("suggestedCapitalPercentagePerGrid").innerText = suggestedCapitalPercentage.toFixed(2) + "%";
+        document.getElementById("effectiveCapitalPerGrid").innerText = effectiveCapitalPerGrid.toFixed(2);
+        document.getElementById("leveragedCapitalPerGrid").innerText = leveragedCapitalPerGrid.toFixed(2);
+        document.getElementById("expectedAveragePnl").innerText = expectedAveragePnl.toFixed(2);
+        document.getElementById("resultContainer").style.display = "block";
+    }
+
+    function cancel(celery_task_id) {
+        fetch('http://45.82.152.74:8000/cancel', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({'celery_task_id': celery_task_id}),
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            }
+            throw new Error('Network response was not ok.');
+        })
+        .then(data => {
+            console.log(data); // Handle response data if needed
+        })
+        .catch(error => {
+            console.error('Error during fetch:', error);
+        });
+    }
+
+    fetch('http://45.82.152.74:8000/stats')
+        .then(response => response.json())
+        .then(data => {
+            const tableBody = document.querySelector('#stats-table tbody');
+            data.forEach(tradeProcess => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${tradeProcess.symbol}</td>
+                    <td>${tradeProcess.unclosed_pnl}</td>
+                    <td>${tradeProcess.closed_pnl}</td>
+                    <td>${tradeProcess.total_pnl}</td>
+                    <td><button class="stop-button" onclick="cancel('${tradeProcess.celery_task_id}')">Stop</button></td>
+                `;
+                tableBody.appendChild(row);
+            });
+        })
+        .catch(error => console.error('Error fetching data:', error));
+</script>
+
+</body>
+</html>

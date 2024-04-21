@@ -6,8 +6,9 @@ from services.config import notifier_config
 bot = telebot.TeleBot(notifier_config.NOTIFIER_KEY)
 
 
-def notification_service(session: Session) -> None:
-    context = generate_stat_report(session)
+def notification_service(context: str = None, session: Session = None) -> None:
+    if session:
+        context = generate_stat_report(session)
     bot.send_message(
         notifier_config.NOTIFICATION_CHANNEL_ID,
         text=context,

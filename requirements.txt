@@ -10,3 +10,6 @@ pydantic_settings
 pyTelegramBotAPI
 telebot
 pycryptodome
+plotly
+aiohttp
+pandas

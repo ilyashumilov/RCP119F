@@ -5,13 +5,13 @@ from sqlalchemy.orm import sessionmaker
 
 class DataBaseConfig(BaseSettings):
     HOST: str = "postgres"
-    USERNAME: str = "postgres"
-    PASSWORD: str = "postgres"
-    DATABASE: str = "postgres"
+    POSTGRES_USER: str = ""
+    POSTGRES_PASSWORD: str = ""
+    POSTGRES_DB: str = ""
 
     @property
     def database_url(self):
-        return f"postgresql://{self.USERNAME}:{self.PASSWORD}@{self.HOST}/{self.DATABASE}"
+        return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.HOST}/{self.POSTGRES_DB}"
 
 database_config = DataBaseConfig()
 

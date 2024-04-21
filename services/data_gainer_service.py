@@ -6,13 +6,20 @@ from datetime import datetime, timedelta
 import aiohttp
 import pandas as pd
 import requests
+from pybit import unified_trading
 
-from config import session
+from services.config import broker_config
 
 
 def get_tradeable_symbols():
+    broker_session = unified_trading.HTTP(
+        api_key=broker_config.BROKER_API_KEY,
+        api_secret=broker_config.BROKER_API_SECRET,
+        testnet=False,
+    )
+
     sym_list = []
-    symbols = session.get_tickers(category="linear")
+    symbols = broker_session.get_tickers(category="linear")
     if "retMsg" in symbols.keys():
         if symbols["retMsg"] == "OK":
             for symbol in symbols["result"]["list"]:

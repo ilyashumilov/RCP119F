@@ -12,3 +12,6 @@ class TradeProcessorCreateSchema(BaseModel):
 
 class TaskCancellationRequestSchema(BaseModel):
     celery_task_id: str
+
+class OverviewerRequestSchema(BaseModel):
+    c_index: str

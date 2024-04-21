@@ -1,0 +1,38 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      BROKER_API_KEY: ${{ secrets.BROKER_API_KEY }}
+      BROKER_API_SECRET: ${{ secrets.BROKER_API_SECRET }}
+      NOTIFIER_KEY: ${{ secrets.NOTIFIER_KEY }}
+      NOTIFICATION_CHANNEL_ID: ${{ secrets.NOTIFICATION_CHANNEL_ID }}
+      POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+      POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh/
+          echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -t rsa ${{ secrets.MACHINE_IP }} >> ~/.ssh/known_hosts
+
+      - name: Copy files to Server
+        run: |
+          rsync -avz --exclude='.git/' --exclude='.github/' . ${{ secrets.ROLE }}@${{ secrets.MACHINE_IP }}:${{ secrets.TARGET_DIR }}
+
+      - name: Run services on Server
+        run: |
+          ssh -i ~/.ssh/id_rsa ${{ secrets.ROLE }}@${{ secrets.MACHINE_IP }} 'cd trd && bash -s' < deploy.sh
