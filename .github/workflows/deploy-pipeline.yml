@@ -23,16 +23,6 @@ jobs:
         run: |
           rsync -avz --exclude='.git/' --exclude='.github/' . ${{ secrets.ROLE }}@${{ secrets.MACHINE_IP }}:${{ secrets.TARGET_DIR }}
 
-      - name: Setup Environment Variables
-        run: |
-          echo "export BROKER_API_KEY=${{ secrets.BROKER_API_KEY }}" >> $GITHUB_ENV
-          echo "export BROKER_API_SECRET=${{ secrets.BROKER_API_SECRET }}" >> $GITHUB_ENV
-          echo "export NOTIFIER_KEY=${{ secrets.NOTIFIER_KEY }}" >> $GITHUB_ENV
-          echo "export NOTIFICATION_CHANNEL_ID=${{ secrets.NOTIFICATION_CHANNEL_ID }}" >> $GITHUB_ENV
-          echo "export POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> $GITHUB_ENV
-          echo "export POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> $GITHUB_ENV
-          echo "export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> $GITHUB_ENV
-
       - name: Run services on Server
         run: |
           ssh -i ~/.ssh/id_rsa ${{ secrets.ROLE }}@${{ secrets.MACHINE_IP }} 'cd trd && bash deploy.sh'
