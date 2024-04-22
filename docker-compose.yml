@@ -63,7 +63,7 @@ services:
       POSTGRES_USER: $POSTGRES_USER
       POSTGRES_PASSWORD: $POSTGRES_PASSWORD
 
-    command: celery -A tasks.tasks worker --loglevel=info
+    command: celery -A tasks.tasks worker --loglevel=info -c 5
     networks:
       - backend
 
