@@ -35,7 +35,7 @@ jobs:
 
       - name: Run services on Server
         run: |
-          ssh -i ~/.ssh/id_rsa ${{ secrets.ROLE }}@${{ secrets.MACHINE_IP }} 'cd trd && docker-compose down && docker-compose build \
+          ssh -i ~/.ssh/id_rsa ${{ secrets.ROLE }}@${{ secrets.MACHINE_IP }} 'cd trd && docker compose down && docker compose build \
           --build-arg BROKER_API_KEY=${{ secrets.BROKER_API_KEY }} \
           --build-arg BROKER_API_SECRET=${{ secrets.BROKER_API_SECRET }} \
           --build-arg NOTIFIER_KEY=${{ secrets.NOTIFIER_KEY }} \
@@ -43,4 +43,4 @@ jobs:
           --build-arg POSTGRES_DB=${{ secrets.POSTGRES_DB }} \
           --build-arg POSTGRES_USER=${{ secrets.POSTGRES_USER }} \
           --build-arg POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} && \
-          docker-compose up -d'
+          docker compose up -d'
