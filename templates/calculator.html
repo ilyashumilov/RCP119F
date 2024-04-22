@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title> . </title>
-    <link rel="icon" href="http://45.82.152.74:8000/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="http://193.124.114.76:8000/favicon.ico" type="image/x-icon">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -124,7 +124,7 @@
     </style>
 </head>
 <body>
-    <a href="http://45.82.152.74:8000/" class="link">CLC</a>
+    <a href="http://193.124.114.76:8000/" class="link">CLC</a>
     <div class="container-wrapper">
         <div class="container">
             <h1>Stats Table</h1>
@@ -217,7 +217,7 @@
     function deploy() {
         var formData = collectFormData();
 
-        fetch('http://45.82.152.74:8000/new', {
+        fetch('http://193.124.114.76:8000/new', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -271,7 +271,7 @@
     }
 
     function cancel(celery_task_id) {
-        fetch('http://45.82.152.74:8000/cancel', {
+        fetch('http://193.124.114.76:8000/cancel', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -292,7 +292,7 @@
         });
     }
 
-    fetch('http://45.82.152.74:8000/stats')
+    fetch('http://193.124.114.76:8000/stats')
         .then(response => response.json())
         .then(data => {
             const tableBody = document.querySelector('#stats-table tbody');
