@@ -1,5 +1,4 @@
 import time
-from datetime import timedelta
 
 from celery import Celery
 from pybit import unified_trading
@@ -46,6 +45,6 @@ def notify_task(self):
 celery.conf.beat_schedule = {
     "notify_task": {
         "task": "tasks.tasks.notify_task",
-        "schedule": timedelta(seconds=15),
+        "schedule": 5,
     },
 }
