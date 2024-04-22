@@ -119,7 +119,7 @@ async def notify_enpoint(request_data: OverviewerRequestSchema):
 
 @app.get("/favicon.ico")
 async def get_favicon():
-    return FileResponse("statics/favicon.png")
+    return FileResponse("statics/favicon.png") # noqa
 
 
 app.mount("/statics", StaticFiles(directory="/app/statics"), name="static")
