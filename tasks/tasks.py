@@ -1,4 +1,5 @@
 import time
+from datetime import timedelta
 
 from celery import Celery
 from pybit import unified_trading
@@ -33,6 +34,7 @@ def trading_task(**kwargs):
 def notify_task(self):
     session = Session()
     try:
+        print('notify_task')
         notification_service(session=session)
     except Exception as exc:
         print(exc)
@@ -45,6 +47,6 @@ def notify_task(self):
 celery.conf.beat_schedule = {
     "notify_task": {
         "task": "tasks.tasks.notify_task",
-        "schedule": 15*60,
+        "schedule": timedelta(minutes=15),
     },
 }

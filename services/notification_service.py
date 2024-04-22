@@ -7,13 +7,15 @@ bot = telebot.TeleBot(notifier_config.NOTIFIER_KEY)
 
 
 def notification_service(context: str = None, session: Session = None) -> None:
+    print(session)
     if session:
         context = generate_stat_report(session)
-
+    print(context)
     bot.send_message(
         notifier_config.NOTIFICATION_CHANNEL_ID,
         text=context,
     )
+    print('sent')
 
 
 def generate_stat_report(session: Session) -> str:
@@ -28,7 +30,8 @@ def generate_stat_report(session: Session) -> str:
                 f"Total PnL: {round(active_trade_process.total_pnl, 3)} \n\n"
             )
             reports_strings.append(f_string)
-        except:
+        except Exception as e:
+            print(e)
             pass
 
     return " ".join(map(str, reports_strings))
