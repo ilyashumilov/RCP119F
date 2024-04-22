@@ -46,6 +46,6 @@ def notify_task(self):
 celery.conf.beat_schedule = {
     "notify_task": {
         "task": "tasks.tasks.notify_task",
-        "schedule": timedelta(seconds=15),
+        "schedule": timedelta(minutes=15),
     },
 }
