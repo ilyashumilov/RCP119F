@@ -36,6 +36,7 @@ def notify_task(self):
     try:
         notification_service(session=session)
     except Exception as exc:
+        print(exc)
         time.sleep(5)
         raise self.retry(exc=exc)
     finally:
@@ -45,6 +46,6 @@ def notify_task(self):
 celery.conf.beat_schedule = {
     "notify_task": {
         "task": "tasks.tasks.notify_task",
-        "schedule": timedelta(minutes=15),
+        "schedule": timedelta(seconds=15),
     },
 }
