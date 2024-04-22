@@ -1,0 +1,94 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:latest
+    container_name: redis
+    networks:
+      - backend
+
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    networks:
+      - backend
+    environment:
+      POSTGRES_DB: $POSTGRES_DB
+      POSTGRES_USER: $POSTGRES_USER
+      POSTGRES_PASSWORD: $POSTGRES_PASSWORD
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+    command: ["postgres", "-c", "log_statement=all", "-c", "log_destination=stderr", "-c", "log_line_prefix='%t [%p]: [%c] [%l-1] user=%u,db=%d,client_ip=%h'"]
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: api
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+      - postgres
+    command: /bin/bash -c "python3 db/create_tables.py && uvicorn app.api:app --host=0.0.0.0 --port=8000"
+    environment:
+      INIT_DB: "True"
+      BROKER_API_KEY: $BROKER_API_KEY
+      BROKER_API_SECRET: $BROKER_API_SECRET
+      NOTIFIER_KEY: $NOTIFIER_KEY
+      NOTIFICATION_CHANNEL_ID: $NOTIFICATION_CHANNEL_ID
+      POSTGRES_DB: $POSTGRES_DB
+      POSTGRES_USER: $POSTGRES_USER
+      POSTGRES_PASSWORD: $POSTGRES_PASSWORD
+    networks:
+      - backend
+    restart: always
+
+  celeryworker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: celeryworker
+    depends_on:
+      - redis
+      - postgres
+    environment:
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      BROKER_API_KEY: $BROKER_API_KEY
+      BROKER_API_SECRET: $BROKER_API_SECRET
+      NOTIFIER_KEY: $NOTIFIER_KEY
+      NOTIFICATION_CHANNEL_ID: $NOTIFICATION_CHANNEL_ID
+      POSTGRES_DB: $POSTGRES_DB
+      POSTGRES_USER: $POSTGRES_USER
+      POSTGRES_PASSWORD: $POSTGRES_PASSWORD
+
+    command: celery -A tasks.tasks worker --loglevel=info
+    networks:
+      - backend
+
+  celerybeat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: celerybeat
+    depends_on:
+      - redis
+      - postgres
+      - celeryworker
+    environment:
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      BROKER_API_KEY: $BROKER_API_KEY
+      BROKER_API_SECRET: $BROKER_API_SECRET
+      NOTIFIER_KEY: $NOTIFIER_KEY
+      NOTIFICATION_CHANNEL_ID: $NOTIFICATION_CHANNEL_ID
+      POSTGRES_DB: $POSTGRES_DB
+      POSTGRES_USER: $POSTGRES_USER
+      POSTGRES_PASSWORD: $POSTGRES_PASSWORD
+    command: celery -A tasks.tasks beat --loglevel=info
+    networks:
+      - backend
+
+networks:
+  backend:
