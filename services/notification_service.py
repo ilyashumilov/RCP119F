@@ -7,12 +7,17 @@ bot = telebot.TeleBot(notifier_config.NOTIFIER_KEY)
 
 
 def notification_service(context: str = None, session: Session = None) -> None:
+    print(f'session: {session}')
     if session:
         context = generate_stat_report(session)
+    print(f'context: {context}')
+
     bot.send_message(
         notifier_config.NOTIFICATION_CHANNEL_ID,
         text=context,
     )
+    print(f'sended')
+
 
 
 def generate_stat_report(session: Session) -> str:
